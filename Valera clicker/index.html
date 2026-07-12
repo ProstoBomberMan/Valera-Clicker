@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Клікер</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<canvas id="bg-canvas"></canvas>
+
+<div id="hud">
+  <div id="hud-score">0 кліків</div>
+  <div id="hud-next"></div>
+</div>
+
+<div id="stats-panel">
+  <div class="stat-row">
+    <span class="stat-label">⚔ Сила</span>
+    <span class="stat-val" id="stat-power">1</span>
+  </div>
+  <div class="stat-row">
+    <span class="stat-label">⚙ Авто</span>
+    <span class="stat-val" id="stat-auto">1</span>
+  </div>
+  <div class="stat-row">
+    <span class="stat-label">🎲 Удача</span>
+    <span class="stat-val" id="stat-luck">1</span>
+  </div>
+</div>
+
+<div id="badges"></div>
+<div id="dvd"><span>DVD</span><small>VIDEO</small></div>
+
+<!-- Кнопка магазину (прихована поки не куплено) -->
+<button id="shop-btn">🏪<span>Магазин</span></button>
+
+<!--
+  КНОПКА КЛІКЕР
+  button.png = червона 3D кнопка
+  pig.png    = свин ATG зверху
+-->
+<div id="clicker-btn">
+  <img class="btn-img"  src="img/button.png" alt="">
+  <img class="btn-char" src="img/pig.png"    alt="">
+</div>
+
+<!-- ВІКНО АПГРЕЙДІВ -->
+<div id="overlay-wrap">
+  <div id="upg-header">
+    <div id="upg-title">Вибери апгрейд!</div>
+    <div id="upg-sub"></div>
+  </div>
+  <div id="upg-center-btn">
+    <img class="btn-img"  src="img/button.png" alt="">
+    <img class="btn-char" src="img/pig.png"    alt="">
+  </div>
+  <!--
+    КАРТИНКИ ДЛЯ АПГРЕЙДІВ:
+    В js/upgrades.js заміни img:null на img:'img/назва.png'
+  -->
+  <div id="upg-cards-row"></div>
+</div>
+
+<script src="js/bg.js"></script>
+<script src="js/upgrades.js"></script>
+<script src="js/game.js"></script>
+</body>
+</html>

@@ -1,0 +1,334 @@
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  width: 100%; height: 100%;
+  overflow: hidden;
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  background: #7a1515;
+}
+
+/* ── ФОН ── */
+#bg-canvas {
+  position: fixed; inset: 0;
+  z-index: 0; pointer-events: none;
+}
+
+/* ── HUD ── */
+#hud {
+  position: fixed; top: 18px; left: 50%;
+  transform: translateX(-50%);
+  text-align: center; z-index: 10; pointer-events: none;
+}
+#hud-score {
+  color: rgba(255,255,255,0.93); font-size: 26px; font-weight: 700;
+  text-shadow: 0 2px 10px rgba(0,0,0,0.55);
+}
+#hud-next { color: rgba(255,255,255,0.42); font-size: 12px; margin-top: 4px; }
+
+/* ── СТАТИ ── */
+#stats-panel {
+  position: fixed; top: 50%; left: 18px;
+  transform: translateY(-50%);
+  z-index: 10; display: flex; flex-direction: column;
+  gap: 8px; pointer-events: none;
+}
+.stat-row {
+  display: flex; align-items: center; gap: 8px;
+  background: rgba(0,0,0,0.35);
+  border: 1px solid rgba(255,255,255,0.09);
+  border-radius: 10px; padding: 6px 12px; min-width: 130px;
+}
+.stat-label { color: rgba(255,255,255,0.6); font-size: 12px; flex: 1; }
+.stat-val   { color: #fff; font-size: 14px; font-weight: 700; min-width: 20px; text-align: right; }
+.stat-val.bump { animation: statBump 0.35s ease-out; }
+@keyframes statBump {
+  0%   { transform: scale(1);    color: #ffe066; }
+  40%  { transform: scale(1.35); color: #ffe066; }
+  100% { transform: scale(1);    color: #fff; }
+}
+
+/* ── БЕЙДЖІ ── */
+#badges {
+  position: fixed; top: 50%; right: 14px;
+  transform: translateY(-50%);
+  display: flex; flex-direction: column;
+  gap: 5px; z-index: 10; pointer-events: none;
+  max-height: 80vh; overflow: hidden;
+}
+.badge         { background: rgba(0,0,0,0.4); color: rgba(255,255,255,0.75); font-size: 10px; padding: 4px 10px; border-radius: 99px; border: 1px solid rgba(255,255,255,0.1); white-space: nowrap; }
+.badge.passive { border-color: rgba(100,200,255,0.25); color: #aadeff; }
+.badge.stat    { border-color: rgba(255,210,60,0.25);  color: #ffd966; }
+
+/* ── DVD ── */
+#dvd {
+  position: fixed; display: none; flex-direction: column;
+  align-items: center; width: 66px; height: 36px;
+  pointer-events: none; z-index: 5;
+}
+#dvd span  { font-size: 22px; font-weight: 900; color: #fff; letter-spacing: 3px; line-height: 1; }
+#dvd small { font-size: 7px; color: rgba(255,255,255,0.6); letter-spacing: 2px; }
+
+/* ══════════════════════════════════════════
+   КНОПКА КЛІКЕР
+   Структура:
+     #clicker-btn       ← клікабельна зона
+       .btn-img         ← фото кнопки (заповнює весь div)
+       .btn-char        ← свин зверху по центру
+══════════════════════════════════════════ */
+#clicker-btn {
+  position: fixed;
+  bottom: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 200px;
+  height: 200px;
+  cursor: pointer;
+  user-select: none;
+  z-index: 20;
+  pointer-events: auto;
+  /* ніяких overflow:hidden — щоб свин міг виступати */
+}
+
+#clicker-btn .btn-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  /* плавний push вниз при натисканні */
+  transition: transform 0.07s ease, filter 0.07s ease;
+  pointer-events: none;
+}
+
+#clicker-btn .btn-char {
+  position: absolute;
+  /* свин сидить у верхній половині кнопки */
+  bottom: 46%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 75%;
+  height: auto;
+  object-fit: contain;
+  pointer-events: none;
+  transition: transform 0.07s ease;
+  filter: drop-shadow(0 4px 8px rgba(0,0,0,0.55));
+}
+
+/* натиснута */
+#clicker-btn.flash .btn-img {
+  transform: translateY(6px) scale(0.97);
+  filter: brightness(1.25);
+}
+#clicker-btn.flash .btn-char {
+  transform: translateX(-50%) translateY(6px);
+}
+
+/* pig-mode — позиція повністю через JS inline стилі */
+#clicker-btn.pig-mode {
+  /* JS встановлює left/top через style, не чіпаємо */
+}
+#clicker-btn.pig-mode.flash .btn-char {
+  transform: translateX(-50%) translateY(6px);
+}
+
+/* locked */
+#clicker-btn.locked { pointer-events: none !important; opacity: 0.45; }
+
+/* ── ПЛАВАЮЧИЙ ТЕКСТ ── */
+.float-txt {
+  position: fixed; font-size: 15px; font-weight: 700;
+  color: #fff; pointer-events: none; z-index: 25;
+  text-shadow: 0 2px 6px rgba(0,0,0,0.6);
+  animation: floatUp 0.95s ease-out forwards; white-space: nowrap;
+}
+.float-txt.crit { color: #ffe066; font-size: 21px; }
+@keyframes floatUp {
+  0%   { opacity: 1; transform: translateY(0) scale(1); }
+  25%  { opacity: 1; transform: translateY(-26px) scale(1.18); }
+  100% { opacity: 0; transform: translateY(-85px) scale(0.85); }
+}
+
+/* ══════════════════════════════════════════
+   ВІКНО АПГРЕЙДІВ
+══════════════════════════════════════════ */
+#overlay-wrap {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,0.82); z-index: 30;
+  flex-direction: column; align-items: center; justify-content: center; gap: 0;
+}
+#overlay-wrap.show { display: flex; }
+
+#upg-header { text-align: center; margin-bottom: 14px; }
+#upg-title  { color: #fff; font-size: 22px; font-weight: 700; }
+#upg-sub    { color: rgba(255,255,255,0.45); font-size: 12px; margin-top: 5px; }
+
+/* Центральна кнопка у вікні */
+#upg-center-btn {
+  position: relative;
+  width: 160px; height: 160px;
+  flex-shrink: 0; pointer-events: none;
+  margin-bottom: 20px;
+}
+#upg-center-btn .btn-img {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  object-fit: contain; opacity: 0.6;
+}
+#upg-center-btn .btn-char {
+  position: absolute;
+  bottom: 46%; left: 50%;
+  transform: translateX(-50%);
+  width: 72%; height: auto;
+  object-fit: contain; opacity: 0.6;
+  filter: drop-shadow(0 3px 6px rgba(0,0,0,0.5));
+}
+
+/* Рядок карток */
+#upg-cards-row {
+  display: flex; align-items: stretch;
+  justify-content: center; gap: 12px;
+  width: min(760px, 96vw);
+}
+
+/* Картка */
+.ucard {
+  background: rgba(255,255,255,0.07);
+  border: 2px solid rgba(255,255,255,0.14);
+  border-radius: 14px; padding: 14px 10px 12px;
+  cursor: pointer;
+  transition: background 0.12s, border-color 0.12s, transform 0.1s, box-shadow 0.1s;
+  display: flex; flex-direction: column;
+  align-items: center; gap: 7px;
+  width: 148px; min-height: 168px;
+  flex-shrink: 0; position: relative;
+}
+.ucard:hover {
+  background: rgba(255,255,255,0.15);
+  border-color: rgba(255,255,255,0.4);
+  transform: scale(1.05) translateY(-5px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+}
+.ucard-type {
+  position: absolute; top: 7px; left: 8px;
+  font-size: 8px; font-weight: 700;
+  letter-spacing: 0.8px; text-transform: uppercase;
+  padding: 2px 6px; border-radius: 99px;
+}
+.ucard-type.passive { background: rgba(100,200,255,0.12); color: #88ccff; border: 1px solid rgba(100,200,255,0.22); }
+.ucard-type.stat    { background: rgba(255,210,60,0.12);  color: #ffd966; border: 1px solid rgba(255,210,60,0.22); }
+
+.ucard-img  { width: 72px; height: 72px; object-fit: contain; image-rendering: pixelated; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.45)); }
+.ucard-icon { font-size: 30px; line-height: 1; margin-top: 10px; }
+
+.ucard-name       { color: #fff; font-size: 12px; font-weight: 700; text-align: center; line-height: 1.3; margin-top: 2px; }
+.ucard-name.tier1 { color: #66e8ff; }
+.ucard-name.tier2 { color: #ffe066; }
+.ucard-desc       { color: rgba(255,255,255,0.54); font-size: 10px; text-align: center; line-height: 1.45; }
+
+@media (max-width: 680px) {
+  #upg-cards-row { gap: 7px; flex-wrap: wrap; }
+  .ucard { width: 130px; min-height: 155px; }
+  #stats-panel { top: auto; bottom: 220px; transform: none; }
+}
+
+/* ════════════════════════════════
+   КНОПКА МАГАЗИНУ
+════════════════════════════════ */
+#shop-btn {
+  position: fixed;
+  bottom: 24px;
+  left: 24px;
+  z-index: 15;
+  display: none;
+  align-items: center;
+  gap: 8px;
+  background: rgba(20,8,8,0.88);
+  border: 2px solid rgba(255,255,255,0.18);
+  border-radius: 14px;
+  padding: 10px 18px;
+  color: #fff;
+  font-size: 15px;
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  cursor: pointer;
+  transition: background 0.13s, border-color 0.13s, transform 0.1s;
+}
+#shop-btn span { font-size: 13px; color: rgba(255,255,255,0.75); }
+#shop-btn.visible { display: flex; }
+#shop-btn:hover {
+  background: rgba(40,12,12,0.95);
+  border-color: rgba(255,255,255,0.35);
+  transform: scale(1.04);
+}
+#shop-btn.shake {
+  animation: shopShake 0.35s ease;
+}
+@keyframes shopShake {
+  0%,100% { transform: translateX(0); }
+  25%      { transform: translateX(-5px); }
+  75%      { transform: translateX(5px); }
+}
+
+/* ════════════════════════════════
+   КАРТКА МАГАЗИНУ В АПГРЕЙДАХ
+════════════════════════════════ */
+.shop-card {
+  border-color: rgba(255,210,60,0.35);
+  background: rgba(255,210,60,0.07);
+}
+.shop-card:hover {
+  border-color: rgba(255,210,60,0.65);
+  background: rgba(255,210,60,0.14);
+}
+.shop-price {
+  margin-top: 4px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #ffe066;
+  background: rgba(255,210,60,0.12);
+  border: 1px solid rgba(255,210,60,0.3);
+  border-radius: 8px;
+  padding: 3px 10px;
+}
+.shop-card.cant-afford {
+  animation: cantAfford 0.45s ease;
+}
+@keyframes cantAfford {
+  0%,100% { border-color: rgba(255,80,80,0.4); }
+  50%      { border-color: rgba(255,80,80,0.9); background: rgba(255,50,50,0.15); }
+}
+
+/* ════════════════════════════════
+   АНІМАЦІЯ ВІКНА АПГРЕЙДІВ
+════════════════════════════════ */
+#overlay-wrap {
+  transition: opacity 0.18s ease;
+}
+#overlay-wrap.show {
+  animation: overlayIn 0.22s ease both;
+}
+@keyframes overlayIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* Картки — з'являються по черзі знизу */
+.ucard {
+  animation: cardIn 0.28s ease both;
+}
+.ucard:nth-child(1) { animation-delay: 0.10s; }
+.ucard:nth-child(2) { animation-delay: 0.18s; }
+.ucard:nth-child(3) { animation-delay: 0.26s; }
+.ucard:nth-child(4) { animation-delay: 0.34s; }
+@keyframes cardIn {
+  from { opacity: 0; transform: translateY(30px) scale(0.93); }
+  to   { opacity: 1; transform: translateY(0)    scale(1); }
+}
+/* Центральна кнопка у вікні */
+#upg-center-btn {
+  animation: centerBtnIn 0.25s ease both;
+  animation-delay: 0.05s;
+}
+@keyframes centerBtnIn {
+  from { opacity: 0; transform: scale(0.85); }
+  to   { opacity: 0.55; transform: scale(1); }
+}
