@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&display=swap');
+
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 html, body {
@@ -55,9 +57,8 @@ html, body {
   gap: 5px; z-index: 10; pointer-events: none;
   max-height: 80vh; overflow: hidden;
 }
-.badge         { background: rgba(0,0,0,0.4); color: rgba(255,255,255,0.75); font-size: 10px; padding: 4px 10px; border-radius: 99px; border: 1px solid rgba(255,255,255,0.1); white-space: nowrap; }
+.badge { background: rgba(0,0,0,0.4); color: rgba(255,255,255,0.75); font-size: 10px; padding: 4px 10px; border-radius: 99px; border: 1px solid rgba(255,255,255,0.1); white-space: nowrap; }
 .badge.passive { border-color: rgba(100,200,255,0.25); color: #aadeff; }
-.badge.stat    { border-color: rgba(255,210,60,0.25);  color: #ffd966; }
 
 /* ── DVD ── */
 #dvd {
@@ -70,10 +71,6 @@ html, body {
 
 /* ══════════════════════════════════════════
    КНОПКА КЛІКЕР
-   Структура:
-     #clicker-btn       ← клікабельна зона
-       .btn-img         ← фото кнопки (заповнює весь div)
-       .btn-char        ← свин зверху по центру
 ══════════════════════════════════════════ */
 #clicker-btn {
   position: fixed;
@@ -86,35 +83,25 @@ html, body {
   user-select: none;
   z-index: 20;
   pointer-events: auto;
-  /* ніяких overflow:hidden — щоб свин міг виступати */
 }
-
 #clicker-btn .btn-img {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
   object-fit: contain;
-  /* плавний push вниз при натисканні */
   transition: transform 0.07s ease, filter 0.07s ease;
   pointer-events: none;
 }
-
 #clicker-btn .btn-char {
   position: absolute;
-  /* свин сидить у верхній половині кнопки */
   bottom: 10%;
   left: 50%;
   transform: translateX(-50%);
-  width: 75%;
-  height: auto;
+  width: 75%; height: auto;
   object-fit: contain;
   pointer-events: none;
   transition: transform 0.07s ease;
   filter: drop-shadow(0 4px 8px rgba(0,0,0,0.55));
 }
-
-/* натиснута */
 #clicker-btn.flash .btn-img {
   transform: translateY(6px) scale(0.97);
   filter: brightness(1.25);
@@ -122,16 +109,10 @@ html, body {
 #clicker-btn.flash .btn-char {
   transform: translateX(-50%) translateY(6px);
 }
-
-/* pig-mode — позиція повністю через JS inline стилі */
-#clicker-btn.pig-mode {
-  /* JS встановлює left/top через style, не чіпаємо */
-}
+#clicker-btn.pig-mode { /* позиція через JS */ }
 #clicker-btn.pig-mode.flash .btn-char {
   transform: translateX(-50%) translateY(6px);
 }
-
-/* locked */
 #clicker-btn.locked { pointer-events: none !important; opacity: 0.45; }
 
 /* ── ПЛАВАЮЧИЙ ТЕКСТ ── */
@@ -149,186 +130,336 @@ html, body {
 }
 
 /* ══════════════════════════════════════════
-   ВІКНО АПГРЕЙДІВ
+   ВІКНО АПГРЕЙДІВ — OVERLAY
 ══════════════════════════════════════════ */
 #overlay-wrap {
-  display: none; position: fixed; inset: 0;
-  background: rgba(0,0,0,0.82); z-index: 30;
-  flex-direction: column; align-items: center; justify-content: center; gap: 0;
-}
-#overlay-wrap.show { display: flex; }
-
-#upg-header { text-align: center; margin-bottom: 14px; }
-#upg-title  { color: #fff; font-size: 22px; font-weight: 700; }
-#upg-sub    { color: rgba(255,255,255,0.45); font-size: 12px; margin-top: 5px; }
-
-/* Центральна кнопка у вікні */
-#upg-center-btn {
-  position: relative;
-  width: 160px; height: 160px;
-  flex-shrink: 0; pointer-events: none;
-  margin-bottom: 20px;
-}
-#upg-center-btn .btn-img {
-  position: absolute; inset: 0;
-  width: 100%; height: 100%;
-  object-fit: contain; opacity: 0.6;
-}
-#upg-center-btn .btn-char {
-  position: absolute;
-  bottom: 46%; left: 50%;
-  transform: translateX(-50%);
-  width: 72%; height: auto;
-  object-fit: contain; opacity: 0.6;
-  filter: drop-shadow(0 3px 6px rgba(0,0,0,0.5));
-}
-
-/* Рядок карток */
-#upg-cards-row {
-  display: flex; align-items: stretch;
-  justify-content: center; gap: 12px;
-  width: min(760px, 96vw);
-}
-
-/* Картка */
-.ucard {
-  background: rgba(255,255,255,0.07);
-  border: 2px solid rgba(255,255,255,0.14);
-  border-radius: 14px; padding: 14px 10px 12px;
-  cursor: pointer;
-  transition: background 0.12s, border-color 0.12s, transform 0.1s, box-shadow 0.1s;
-  display: flex; flex-direction: column;
-  align-items: center; gap: 7px;
-  width: 148px; min-height: 168px;
-  flex-shrink: 0; position: relative;
-}
-.ucard:hover {
-  background: rgba(255,255,255,0.15);
-  border-color: rgba(255,255,255,0.4);
-  transform: scale(1.05) translateY(-5px);
-  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
-}
-.ucard-type {
-  position: absolute; top: 7px; left: 8px;
-  font-size: 8px; font-weight: 700;
-  letter-spacing: 0.8px; text-transform: uppercase;
-  padding: 2px 6px; border-radius: 99px;
-}
-.ucard-type.passive { background: rgba(100,200,255,0.12); color: #88ccff; border: 1px solid rgba(100,200,255,0.22); }
-.ucard-type.stat    { background: rgba(255,210,60,0.12);  color: #ffd966; border: 1px solid rgba(255,210,60,0.22); }
-
-.ucard-img  { width: 72px; height: 72px; object-fit: contain; image-rendering: pixelated; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.45)); }
-.ucard-icon { font-size: 30px; line-height: 1; margin-top: 10px; }
-
-.ucard-name       { color: #fff; font-size: 12px; font-weight: 700; text-align: center; line-height: 1.3; margin-top: 2px; }
-.ucard-name.tier1 { color: #66e8ff; }
-.ucard-name.tier2 { color: #ffe066; }
-.ucard-desc       { color: rgba(255,255,255,0.54); font-size: 10px; text-align: center; line-height: 1.45; }
-
-@media (max-width: 680px) {
-  #upg-cards-row { gap: 7px; flex-wrap: wrap; }
-  .ucard { width: 130px; min-height: 155px; }
-  #stats-panel { top: auto; bottom: 220px; transform: none; }
-}
-
-/* ════════════════════════════════
-   КНОПКА МАГАЗИНУ
-════════════════════════════════ */
-#shop-btn {
-  position: fixed;
-  bottom: 24px;
-  left: 24px;
-  z-index: 15;
   display: none;
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.75);
+  z-index: 30;
+  flex-direction: column;
   align-items: center;
-  gap: 8px;
-  background: rgba(20,8,8,0.88);
-  border: 2px solid rgba(255,255,255,0.18);
-  border-radius: 14px;
-  padding: 10px 18px;
-  color: #fff;
-  font-size: 15px;
-  font-family: 'Segoe UI', system-ui, sans-serif;
-  cursor: pointer;
-  transition: background 0.13s, border-color 0.13s, transform 0.1s;
-}
-#shop-btn span { font-size: 13px; color: rgba(255,255,255,0.75); }
-#shop-btn.visible { display: flex; }
-#shop-btn:hover {
-  background: rgba(40,12,12,0.95);
-  border-color: rgba(255,255,255,0.35);
-  transform: scale(1.04);
-}
-#shop-btn.shake {
-  animation: shopShake 0.35s ease;
-}
-@keyframes shopShake {
-  0%,100% { transform: translateX(0); }
-  25%      { transform: translateX(-5px); }
-  75%      { transform: translateX(5px); }
-}
-
-/* ════════════════════════════════
-   КАРТКА МАГАЗИНУ В АПГРЕЙДАХ
-════════════════════════════════ */
-.shop-card {
-  border-color: rgba(255,210,60,0.35);
-  background: rgba(255,210,60,0.07);
-}
-.shop-card:hover {
-  border-color: rgba(255,210,60,0.65);
-  background: rgba(255,210,60,0.14);
-}
-.shop-price {
-  margin-top: 4px;
-  font-size: 12px;
-  font-weight: 700;
-  color: #ffe066;
-  background: rgba(255,210,60,0.12);
-  border: 1px solid rgba(255,210,60,0.3);
-  border-radius: 8px;
-  padding: 3px 10px;
-}
-.shop-card.cant-afford {
-  animation: cantAfford 0.45s ease;
-}
-@keyframes cantAfford {
-  0%,100% { border-color: rgba(255,80,80,0.4); }
-  50%      { border-color: rgba(255,80,80,0.9); background: rgba(255,50,50,0.15); }
-}
-
-/* ════════════════════════════════
-   АНІМАЦІЯ ВІКНА АПГРЕЙДІВ
-════════════════════════════════ */
-#overlay-wrap {
-  transition: opacity 0.18s ease;
+  justify-content: center;
+  gap: 0;
 }
 #overlay-wrap.show {
-  animation: overlayIn 0.22s ease both;
+  display: flex;
+  animation: overlayIn 0.2s ease both;
 }
 @keyframes overlayIn {
   from { opacity: 0; }
   to   { opacity: 1; }
 }
 
-/* Картки — з'являються по черзі знизу */
-.ucard {
-  animation: cardIn 0.28s ease both;
+/* Заголовок */
+#upg-header { text-align: center; margin-bottom: 18px; }
+#upg-title  {
+  color: #fff; font-size: 24px; font-weight: 700;
+  font-family: 'Caveat', cursive;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.6);
 }
-.ucard:nth-child(1) { animation-delay: 0.10s; }
-.ucard:nth-child(2) { animation-delay: 0.18s; }
-.ucard:nth-child(3) { animation-delay: 0.26s; }
-.ucard:nth-child(4) { animation-delay: 0.34s; }
-@keyframes cardIn {
-  from { opacity: 0; transform: translateY(30px) scale(0.93); }
-  to   { opacity: 1; transform: translateY(0)    scale(1); }
-}
+#upg-sub { color: rgba(255,255,255,0.45); font-size: 12px; margin-top: 5px; }
+
 /* Центральна кнопка у вікні */
 #upg-center-btn {
-  animation: centerBtnIn 0.25s ease both;
-  animation-delay: 0.05s;
+  position: relative;
+  width: 180px; height: 220px;
+  flex-shrink: 0; pointer-events: none;
+  margin-bottom: 20px;
+  animation: centerBtnIn 0.25s ease 0.05s both;
 }
 @keyframes centerBtnIn {
   from { opacity: 0; transform: scale(0.85); }
-  to   { opacity: 0.55; transform: scale(1); }
+  to   { opacity: 1; transform: scale(1); }
+}
+#upg-center-btn .btn-img {
+  position: absolute;
+  bottom: 0; left: 50%; transform: translateX(-50%);
+  width: 180px; height: 180px;
+  object-fit: contain;
+}
+#upg-center-btn .btn-char {
+  position: absolute;
+  bottom: 80px; left: 50%; transform: translateX(-50%);
+  width: 110px; height: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 4px 8px rgba(0,0,0,0.6));
+  z-index: 2;
+}
+
+/* Рядок карток */
+#upg-cards-row {
+  display: flex; align-items: flex-start;
+  justify-content: center; gap: 16px;
+  width: min(820px, 96vw);
+}
+
+/* ══════════════════════════════════════════
+   КАРТКА АПГРЕЙДУ — СТИЛЬ MEWGENICS
+   .ucard
+     .ucard-scroll     ← сувій зверху (назва)
+     .ucard-frame      ← біла рамка з іконкою
+     .ucard-paper      ← паперовий низ з описом
+══════════════════════════════════════════ */
+.ucard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+  width: 158px;
+  flex-shrink: 0;
+  position: relative;
+  user-select: none;
+  animation: cardIn 0.3s ease both;
+  /* perspective для 3D hover */
+  perspective: 600px;
+}
+.ucard:nth-child(1) { animation-delay: 0.05s; }
+.ucard:nth-child(2) { animation-delay: 0.12s; }
+.ucard:nth-child(3) { animation-delay: 0.19s; }
+.ucard:nth-child(4) { animation-delay: 0.26s; }
+@keyframes cardIn {
+  from { opacity: 0; transform: translateY(28px) scale(0.92); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* Внутрішній контейнер — він крутиться в 3D */
+.ucard-inner {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transition:
+    transform 0.35s cubic-bezier(0.23, 1, 0.32, 1),
+    filter 0.35s ease;
+  transform-style: preserve-3d;
+  will-change: transform;
+}
+
+/* Hover — тільки для пасивок (JS додає клас .is-passive) */
+.ucard.is-passive:hover .ucard-inner {
+  transform: rotateY(-12deg) rotateX(4deg) scale(1.04);
+  filter: brightness(0.88);
+}
+/* Для статів — простий підйом без 3D */
+.ucard:not(.is-passive):hover .ucard-inner {
+  transform: translateY(-6px) scale(1.03);
+  filter: brightness(1.05);
+}
+.ucard:active .ucard-inner {
+  transform: translateY(-2px) scale(0.97) !important;
+  transition-duration: 0.08s;
+}
+
+/* Блискучий оберт для пасивок при hover — псевдоелемент */
+.ucard .ucard-frame::after {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: 10px;
+  background: conic-gradient(
+    from var(--shine-angle, 0deg),
+    transparent 0deg,
+    rgba(255,255,255,0.55) 60deg,
+    transparent 120deg
+  );
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+  z-index: 3;
+}
+.ucard:hover .ucard-frame::after {
+  opacity: 1;
+  animation: shineRotate 1.8s linear infinite;
+}
+@keyframes shineRotate {
+  from { --shine-angle: 0deg; }
+  to   { --shine-angle: 360deg; }
+}
+/* Підтримка @property для плавної анімації кута */
+@property --shine-angle {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
+}
+
+/* ── СУВІЙ ЗВЕРХУ ── */
+.ucard-scroll {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  background: linear-gradient(180deg, #e8d5a0 0%, #d4b87a 40%, #c9aa68 60%, #d4b87a 100%);
+  border: 2px solid #8b6914;
+  border-radius: 6px 6px 0 0;
+  padding: 5px 8px;
+  text-align: center;
+  box-shadow:
+    inset 0 2px 4px rgba(255,255,255,0.5),
+    inset 0 -2px 4px rgba(0,0,0,0.2),
+    0 2px 0 #6b4f0a,
+    2px 0 0 #a07820,
+    -2px 0 0 #a07820;
+}
+.ucard-scroll::before,
+.ucard-scroll::after {
+  content: '';
+  position: absolute;
+  left: 4px; right: 4px;
+  height: 2px;
+  background: rgba(0,0,0,0.07);
+  border-radius: 99px;
+}
+.ucard-scroll::before { top: 3px; }
+.ucard-scroll::after  { bottom: 3px; }
+
+.ucard-scroll-title {
+  font-family: 'Caveat', cursive;
+  font-size: 14px; font-weight: 700;
+  color: #3a2200; line-height: 1.2;
+  text-shadow: 0 1px 0 rgba(255,255,255,0.4);
+  position: relative; z-index: 1;
+}
+.ucard-scroll-title.tier1 { color: #005577; }
+.ucard-scroll-title.tier2 { color: #774400; }
+
+/* ── БІЛА РАМКА З ІКОНКОЮ ── */
+.ucard-frame {
+  width: 100%;
+  background: #f4f0e8;
+  border: 2px solid #8b6914;
+  border-top: none;
+  border-bottom: none;
+  position: relative;
+  overflow: hidden;
+  /* rounded corners тільки якщо нема paper знизу */
+}
+/* Внутрішня чорна рамка */
+.ucard-frame::before {
+  content: '';
+  position: absolute;
+  inset: 4px;
+  border: 1.5px solid rgba(0,0,0,0.5);
+  border-radius: 8px;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.ucard-icon-wrap {
+  width: 100%;
+  height: 110px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+/* Картинка — займає всю рамку, заокруглені кути */
+.ucard-icon-wrap img {
+  width: calc(100% - 10px);
+  height: calc(100% - 10px);
+  object-fit: cover;
+  border-radius: 8px;
+  image-rendering: auto;
+  display: block;
+}
+.ucard-emoji {
+  font-size: 56px;
+  line-height: 1;
+}
+
+/* ── ПАПЕРОВИЙ НИЗ З ОПИСОМ ── */
+.ucard-paper {
+  width: 100%;
+  background: linear-gradient(180deg, #f0e6c8 0%, #e4d09e 100%);
+  border: 2px solid #8b6914;
+  border-top: 1.5px solid #a07830;
+  border-radius: 0 0 8px 8px;
+  padding: 7px 10px 9px;
+  text-align: center;
+  box-shadow:
+    inset 0 2px 0 rgba(255,255,255,0.4),
+    0 4px 0 #5a3e08,
+    2px 4px 0 #4a3206,
+    -2px 4px 0 #4a3206;
+}
+.ucard-desc-text {
+  font-family: 'Caveat', cursive;
+  font-size: 13px; color: #2a1800; line-height: 1.35;
+}
+.ucard-type-badge {
+  display: inline-block;
+  font-size: 9px; font-weight: 700;
+  letter-spacing: 0.5px; text-transform: uppercase;
+  padding: 1px 6px; border-radius: 99px; margin-bottom: 3px;
+}
+.ucard-type-badge.passive {
+  background: rgba(0,80,180,0.1);
+  color: #003888;
+  border: 1px solid rgba(0,80,180,0.3);
+}
+.ucard-type-badge.stat {
+  background: rgba(100,50,0,0.1);
+  color: #5a2800;
+  border: 1px solid rgba(100,50,0,0.25);
+}
+
+/* ── МАГАЗИН ── */
+.ucard.shop-card .ucard-scroll {
+  background: linear-gradient(180deg, #f5e070 0%, #d4aa20 40%, #c89a10 60%, #d4aa20 100%);
+  border-color: #806000;
+  box-shadow:
+    inset 0 2px 4px rgba(255,255,255,0.6),
+    inset 0 -2px 4px rgba(0,0,0,0.2),
+    0 2px 0 #604500,
+    2px 0 0 #906010,
+    -2px 0 0 #906010;
+}
+.shop-price {
+  margin-top: 5px;
+  font-family: 'Caveat', cursive;
+  font-size: 14px; font-weight: 700; color: #5a2800;
+}
+.ucard.shop-card.cant-afford .ucard-frame {
+  animation: cantAfford 0.45s ease;
+}
+@keyframes cantAfford {
+  0%,100% { background: #f4f0e8; }
+  50%      { background: #ffe0e0; }
+}
+
+/* ── КНОПКА МАГАЗИНУ ── */
+#shop-btn {
+  position: fixed; bottom: 24px; left: 24px;
+  z-index: 15; display: none; align-items: center; gap: 8px;
+  background: rgba(20,8,8,0.88);
+  border: 2px solid rgba(255,255,255,0.18);
+  border-radius: 14px; padding: 10px 18px;
+  color: #fff; font-size: 15px;
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  cursor: pointer;
+  transition: background 0.13s, border-color 0.13s, transform 0.1s;
+}
+#shop-btn span { font-size: 13px; color: rgba(255,255,255,0.75); }
+#shop-btn.visible { display: flex; }
+#shop-btn:hover { background: rgba(40,12,12,0.95); border-color: rgba(255,255,255,0.35); transform: scale(1.04); }
+#shop-btn.shake { animation: shopShake 0.35s ease; }
+@keyframes shopShake {
+  0%,100% { transform: translateX(0); }
+  25%      { transform: translateX(-5px); }
+  75%      { transform: translateX(5px); }
+}
+
+@media (max-width: 680px) {
+  #upg-cards-row { gap: 8px; flex-wrap: wrap; justify-content: center; }
+  .ucard { width: 140px; }
+  #stats-panel { top: auto; bottom: 220px; transform: none; }
+}
+
+/* ── СВИН — дихання ── */
+@keyframes pigBreathe {
+  0%, 100% { transform: translateX(-50%) scale(1,   1);   }
+  40%       { transform: translateX(-50%) scale(1.04, 1.06); }
+  70%       { transform: translateX(-50%) scale(0.97, 0.98); }
+}
+#clicker-btn:not(.pig-mode) .btn-char {
+  animation: pigBreathe 2.8s ease-in-out infinite;
 }

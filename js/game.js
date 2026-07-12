@@ -25,6 +25,28 @@ const BASE_MS = [25,50,100,200,500,1000,2000,5000,10000,25000,50000,100000,20000
 function rebuildMilestones() { S.milestones = BASE_MS.slice(); }
 rebuildMilestones();
 
+/* ════════════════════════════════
+   АУДІО
+════════════════════════════════ */
+const bgm      = document.getElementById('bgm');
+const sfxClick = document.getElementById('sfx-click');
+
+/* Запускаємо музику після першого кліку (браузерна політика autoplay) */
+let musicStarted = false;
+function startMusic() {
+  if (musicStarted) return;
+  musicStarted = true;
+  bgm.volume = 0.35;
+  bgm.play().catch(() => {});
+}
+
+function playClick() {
+  startMusic();
+  sfxClick.currentTime = 0;
+  sfxClick.volume = 0.7;
+  sfxClick.play().catch(() => {});
+}
+
 /* DOM */
 const scoreEl    = document.getElementById('hud-score');
 const nextEl     = document.getElementById('hud-next');
@@ -170,6 +192,8 @@ function doClick(x, y, manual) {
 document.addEventListener('click', function(e) {
   if (S.showingUpgrade) return;
   if (!btn.contains(e.target) && e.target !== btn) return;
+  startMusic();
+  playClick();
   const r = btn.getBoundingClientRect();
   doClick(r.left + r.width/2, r.top + r.height/2, true);
   btn.classList.add('flash');
@@ -227,10 +251,12 @@ function showUpgradeScreen() {
 
   const stats   = shuffle(pool.filter(u => u.type === 'stat'));
   const passive = shuffle(pool.filter(u => u.type === 'passive'));
-  let picks = [...stats.slice(0,2), ...passive.slice(0,2)];
+  /* Рандомно мікс статів і пасивок щоб не повторювались позиції */
+  let combined = shuffle([...stats.slice(0,2), ...passive.slice(0,2)]);
+  let picks = combined;
   if (picks.length < 4) {
     const have = new Set(picks.map(u => u.id));
-    picks = [...picks, ...shuffle(pool.filter(u => !have.has(u.id)))].slice(0, 4);
+    picks = shuffle([...picks, ...shuffle(pool.filter(u => !have.has(u.id)))]).slice(0, 4);
   }
 
   /* Якщо випав магазин — замінюємо останній слот */
@@ -257,29 +283,91 @@ function showUpgradeScreen() {
 
 function makeCard(u) {
   const c = document.createElement('div');
-  c.className = 'ucard';
-  const tierCls = u.tier === 2 ? 'tier2' : u.tier === 1 ? 'tier1' : '';
-  const typeTag = u.type === 'passive' ? `<span class="ucard-type passive">Пасивка</span>` : '';
+  const isPassive = u.type === 'passive';
+  c.className = 'ucard' + (isPassive ? ' is-passive' : '');
+  const tierCls  = u.tier === 2 ? 'tier2' : u.tier === 1 ? 'tier1' : '';
+  const typeBadge = isPassive
+    ? `<div class="ucard-type-badge passive">Пасивка</div>`
+    : `<div class="ucard-type-badge stat">Стат</div>`;
   const media = u.img
-    ? `<img class="ucard-img" src="${u.img}" alt="${u.name}">`
-    : `<div class="ucard-icon">${u.icon}</div>`;
-  c.innerHTML = `${typeTag}${media}<div class="ucard-name ${tierCls}">${u.name}</div><div class="ucard-desc">${u.desc}</div>`;
+    ? `<img src="${u.img}" alt="${u.name}">`
+    : `<div class="ucard-emoji">${u.icon}</div>`;
+
+  c.innerHTML = `
+    <div class="ucard-inner">
+      <div class="ucard-scroll">
+        <div class="ucard-scroll-title ${tierCls}">${u.name}</div>
+      </div>
+      <div class="ucard-frame">
+        <div class="ucard-icon-wrap">${media}</div>
+      </div>
+      <div class="ucard-paper">
+        ${typeBadge}
+        <div class="ucard-desc-text">${u.desc}</div>
+      </div>
+    </div>`;
+
+  /* Balatro 3D tilt на mousemove для всіх карток */
+  {
+    const inner = c.querySelector('.ucard-inner');
+    c.addEventListener('mousemove', e => {
+      const r = c.getBoundingClientRect();
+      const x = (e.clientX - r.left) / r.width  - 0.5;
+      const y = (e.clientY - r.top)  / r.height - 0.5;
+      const rotY = x * (isPassive ? 22 : 14);
+      const rotX = -y * (isPassive ? 10 : 6);
+      inner.style.transform = `rotateY(${rotY}deg) rotateX(${rotX}deg) scale(1.05)`;
+      inner.style.filter = isPassive ? 'brightness(0.86)' : 'brightness(1.06)';
+      inner.style.transition = 'transform 0.08s ease, filter 0.08s ease';
+    });
+    c.addEventListener('mouseleave', () => {
+      inner.style.transform = '';
+      inner.style.filter    = '';
+      inner.style.transition = 'transform 0.4s cubic-bezier(0.23,1,0.32,1), filter 0.4s ease';
+    });
+  }
+
   c.addEventListener('click', () => pickUpgrade(u));
   return c;
 }
 
 function makeShopCard() {
   const c = document.createElement('div');
-  c.className = 'ucard shop-card';
+  c.className = 'ucard shop-card is-passive';
   c.innerHTML = `
-    <span class="ucard-type passive">Особливе</span>
-    <div class="ucard-icon">🏪</div>
-    <div class="ucard-name tier2">Магазин</div>
-    <div class="ucard-desc">Відкриває магазин у лівому нижньому куті.</div>
-    <div class="shop-price">💰 1 000 очок</div>`;
+    <div class="ucard-inner">
+      <div class="ucard-scroll">
+        <div class="ucard-scroll-title tier2">Магазин</div>
+      </div>
+      <div class="ucard-frame">
+        <div class="ucard-icon-wrap">
+          <div class="ucard-emoji">🏪</div>
+        </div>
+      </div>
+      <div class="ucard-paper">
+        <div class="ucard-type-badge passive">Особливе</div>
+        <div class="ucard-desc-text">Відкриває магазин у лівому нижньому куті.</div>
+        <div class="shop-price">💰 1 000 очок</div>
+      </div>
+    </div>`;
+
+  const inner = c.querySelector('.ucard-inner');
+  c.addEventListener('mousemove', e => {
+    const r = c.getBoundingClientRect();
+    const x = (e.clientX - r.left) / r.width  - 0.5;
+    const y = (e.clientY - r.top)  / r.height - 0.5;
+    inner.style.transform = `rotateY(${x * 22}deg) rotateX(${-y * 10}deg) scale(1.05)`;
+    inner.style.filter    = 'brightness(0.86)';
+    inner.style.transition = 'transform 0.08s ease, filter 0.08s ease';
+  });
+  c.addEventListener('mouseleave', () => {
+    inner.style.transform = '';
+    inner.style.filter    = '';
+    inner.style.transition = 'transform 0.4s cubic-bezier(0.23,1,0.32,1), filter 0.4s ease';
+  });
+
   c.addEventListener('click', () => {
     if (S.clicks < 1000) {
-      /* мигаємо червоним — не вистачає грошей */
       c.classList.add('cant-afford');
       setTimeout(() => c.classList.remove('cant-afford'), 500);
       spawnFloat('Не вистачає очок!', window.innerWidth/2, window.innerHeight/2, 'crit');
