@@ -103,7 +103,7 @@ html, body {
 #clicker-btn .btn-char {
   position: absolute;
   /* свин сидить у верхній половині кнопки */
-  bottom: 46%;
+  bottom: 10%;
   left: 50%;
   transform: translateX(-50%);
   width: 75%;
