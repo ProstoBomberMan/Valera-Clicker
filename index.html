@@ -3,49 +3,55 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Клікер</title>
+  <title>Клікер Валери</title>
   <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/shop.css">
 </head>
 <body>
 
 <canvas id="bg-canvas"></canvas>
-
-<!-- Фонова музика -->
 <audio id="bgm" src="img/song.mp3" loop preload="auto"></audio>
-<!-- Звук кліку -->
 <audio id="sfx-click" src="img/place.wav" preload="auto"></audio>
 
+<!-- HUD -->
 <div id="hud">
   <div id="hud-score">0 кліків</div>
   <div id="hud-next"></div>
 </div>
+<!-- День місяця -->
+<div id="hud-day">День 1</div>
 
+<!-- Стати -->
 <div id="stats-panel">
-  <div class="stat-row">
-    <span class="stat-label">⚔ Сила</span>
-    <span class="stat-val" id="stat-power">1</span>
-  </div>
-  <div class="stat-row">
-    <span class="stat-label">⚙ Авто</span>
-    <span class="stat-val" id="stat-auto">1</span>
-  </div>
-  <div class="stat-row">
-    <span class="stat-label">🎲 Удача</span>
-    <span class="stat-val" id="stat-luck">1</span>
-  </div>
+  <div class="stat-row"><span class="stat-label">⚔ Сила</span><span class="stat-val" id="stat-power">1</span></div>
+  <div class="stat-row"><span class="stat-label">⚙ Авто</span><span class="stat-val" id="stat-auto">1</span></div>
+  <div class="stat-row"><span class="stat-label">🎲 Удача</span><span class="stat-val" id="stat-luck">1</span></div>
 </div>
 
 <div id="badges"></div>
 <div id="dvd"><span>DVD</span><small>VIDEO</small></div>
 
-<button id="shop-btn">🏪<span>Магазин</span></button>
+<!-- Кнопка магазину -->
+<button id="shop-btn" title="Крамниця">🏪<span class="btn-label">Магазин</span></button>
 
+<!-- Кнопка Пропустити день (верхній правий кут) -->
+<button id="skip-day-btn" title="Пропустити день">🌙<span class="btn-label">Спати</span></button>
+
+<!-- Інвентар -->
+<div id="inventory-bar">
+  <div class="inv-slot" id="inv-head"><span class="inv-empty">Голова</span></div>
+  <div class="inv-slot" id="inv-body"><span class="inv-empty">Тіло</span></div>
+  <div class="inv-slot" id="inv-face"><span class="inv-empty">Лице</span></div>
+  <div class="inv-slot" id="inv-trinket"><span class="inv-empty">Трінкет</span></div>
+</div>
+
+<!-- Кнопка клікер -->
 <div id="clicker-btn">
   <img class="btn-img"  src="img/button.png" alt="">
   <img class="btn-char" src="img/pig.png"    alt="">
 </div>
 
-<!-- ВІКНО АПГРЕЙДІВ -->
+<!-- Вікно апгрейдів -->
 <div id="overlay-wrap">
   <div id="upg-header">
     <div id="upg-title">Вибери апгрейд!</div>
@@ -58,9 +64,85 @@
   <div id="upg-cards-row"></div>
 </div>
 
+<!-- ════ МАГАЗИН ════ -->
+<div id="shop-overlay">
+  <div class="shop-panel">
+    <div class="shop-header">
+      <div class="shop-title">🏪 Крамниця Валери</div>
+      <div class="shop-balance" id="shop-bal">💰 0</div>
+      <button class="shop-close-btn" id="shop-close-btn">✕</button>
+    </div>
+    <div class="shop-body">
+      <div class="shop-content">
+        <!-- Скіни -->
+        <div class="shop-section">
+          <div class="shop-section-title">🐷 Сети / Скіни</div>
+          <div class="sh-grid" id="shop-skins"></div>
+        </div>
+        <!-- Предмети -->
+        <div class="shop-section">
+          <div class="shop-section-title">🎒 Предмети</div>
+          <div class="sh-grid" id="shop-items"></div>
+        </div>
+      </div>
+      <!-- Продавець -->
+      <div class="shop-seller">
+        <div class="seller-bubble"><span id="seller-txt">Вибирай, вибирай...</span></div>
+        <img src="img/pig.png" class="seller-pig" alt="">
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════ НІЧ / ПРОПУСТИТИ ДЕНЬ ════ -->
+<div id="night-overlay" style="display:none">
+  <div class="night-room">
+    <!-- SVG кімната -->
+    <svg class="night-bg-svg" viewBox="0 0 800 500" xmlns="http://www.w3.org/2000/svg">
+      <!-- підлога -->
+      <rect x="0" y="360" width="800" height="140" fill="#2a1a0a"/>
+      <!-- стіна -->
+      <rect x="0" y="0" width="800" height="360" fill="#1a0f2e"/>
+      <!-- зірки -->
+      <circle cx="80" cy="60" r="2" fill="#fff" opacity="0.7"/>
+      <circle cx="200" cy="30" r="1.5" fill="#fff" opacity="0.5"/>
+      <circle cx="350" cy="80" r="2" fill="#fff" opacity="0.8"/>
+      <circle cx="500" cy="20" r="1" fill="#fff" opacity="0.6"/>
+      <circle cx="650" cy="55" r="2" fill="#fff" opacity="0.7"/>
+      <circle cx="720" cy="90" r="1.5" fill="#fff" opacity="0.5"/>
+      <!-- місяць -->
+      <circle cx="680" cy="70" r="40" fill="#f5e070" opacity="0.9"/>
+      <circle cx="700" cy="55" r="34" fill="#1a0f2e"/>
+      <!-- ліжко -->
+      <rect x="180" y="290" width="380" height="80" rx="8" fill="#4a2800"/>
+      <rect x="180" y="260" width="380" height="50" rx="6" fill="#6b3a00"/>
+      <rect x="500" y="240" width="80" height="110" rx="6" fill="#5a3000"/>
+      <rect x="180" y="240" width="80" height="110" rx="6" fill="#5a3000"/>
+      <!-- подушка -->
+      <rect x="210" y="255" width="130" height="40" rx="8" fill="#e8d5b0"/>
+      <!-- ковдра -->
+      <rect x="190" y="290" width="340" height="60" rx="6" fill="#8b2020"/>
+      <rect x="190" y="290" width="340" height="15" rx="4" fill="#a03030"/>
+      <!-- вікно -->
+      <rect x="580" y="60" width="160" height="120" rx="4" fill="#0a0520" stroke="#6b4a20" stroke-width="4"/>
+      <line x1="660" y1="60" x2="660" y2="180" stroke="#6b4a20" stroke-width="3"/>
+      <line x1="580" y1="120" x2="740" y2="120" stroke="#6b4a20" stroke-width="3"/>
+    </svg>
+
+    <div class="night-content">
+      <div id="night-day" class="night-day-badge">День 2</div>
+      <img src="img/pig.png" class="night-pig" alt="">
+      <div id="night-text" class="night-text">Ніч була спокійною.</div>
+      <div id="night-extra" class="night-extra"></div>
+      <button id="night-next-btn" class="night-next-btn">Далі →</button>
+    </div>
+  </div>
+</div>
+
 <script src="js/bg.js"></script>
 <script src="js/upgrades.js"></script>
+<script src="js/shop.js"></script>
+<script src="js/shop-ui.js"></script>
 <script src="js/game.js"></script>
-
 </body>
 </html>
