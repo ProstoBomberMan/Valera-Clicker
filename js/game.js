@@ -38,8 +38,9 @@ rebuildMilestones();
 /* ════════════════════════════════
    АУДІО
 ════════════════════════════════ */
-const bgm      = document.getElementById('bgm');
 const sfxClick = document.getElementById('sfx-click');
+const bgm = document.getElementById("bgm");
+const shopBgm = document.getElementById("shop-bgm");
 let musicStarted = false;
 
 function startMusic() {
@@ -433,3 +434,21 @@ function loop(ts){
 S.recalc();
 window.generateShopPool();
 requestAnimationFrame(loop);
+
+function playGameMusic() {
+    shopBgm.pause();
+    shopBgm.currentTime = 0;
+
+    bgm.loop = true;
+    bgm.volume = 0.35;
+    bgm.play().catch(() => {});
+}
+
+function playShopMusic() {
+    bgm.pause();
+    bgm.currentTime = 0;
+
+    shopBgm.loop = true;
+    shopBgm.volume = 0.35;
+    shopBgm.play().catch(() => {});
+}

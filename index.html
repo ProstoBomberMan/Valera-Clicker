@@ -12,6 +12,7 @@
 <canvas id="bg-canvas"></canvas>
 <audio id="bgm" src="img/song.mp3" loop preload="auto"></audio>
 <audio id="sfx-click" src="img/place.wav" preload="auto"></audio>
+<audio id="shop-bgm" src="img/shop-song.mp3" loop preload="auto"></audio>
 
 <!-- HUD -->
 <div id="hud">
@@ -32,7 +33,9 @@
 <div id="dvd"><span>DVD</span><small>VIDEO</small></div>
 
 <!-- Кнопка магазину -->
-<button id="shop-btn" title="Крамниця">🏪<span class="btn-label">Магазин</span></button>
+<button id="shop-btn" title="Крамниця">
+  <img class="shop-btn-img" src="img/shop/atb-sign.png" alt="Крамниця">
+</button>
 
 <!-- Кнопка Пропустити день (верхній правий кут) -->
 <button id="skip-day-btn" title="Пропустити день">🌙<span class="btn-label">Спати</span></button>
@@ -68,27 +71,26 @@
 <div id="shop-overlay">
   <div class="shop-panel">
     <div class="shop-header">
-      <div class="shop-title">🏪 Крамниця Валери</div>
-      <div class="shop-balance" id="shop-bal">💰 0</div>
-      <button class="shop-close-btn" id="shop-close-btn">✕</button>
+      <div class="shop-title">Крамниця</div>
+      <div class="shop-balance" id="shop-bal-wrap">
+        <img class="shop-balance-bg" src="img/shop/balance-pill.png" alt="">
+        <span class="shop-balance-txt" id="shop-bal">0</span>
+      </div>
+      <button class="shop-close-btn" id="shop-close-btn">
+        <img src="img/shop/close-btn.png" alt="Закрити">
+      </button>
     </div>
     <div class="shop-body">
-      <div class="shop-content">
-        <!-- Скіни -->
-        <div class="shop-section">
-          <div class="shop-section-title">🐷 Сети / Скіни</div>
-          <div class="sh-grid" id="shop-skins"></div>
-        </div>
-        <!-- Предмети -->
-        <div class="shop-section">
-          <div class="shop-section-title">🎒 Предмети</div>
-          <div class="sh-grid" id="shop-items"></div>
-        </div>
-      </div>
+      <!-- Полички з товарами -->
+      <div class="shop-shelves" id="shop-shelves"></div>
+
       <!-- Продавець -->
       <div class="shop-seller">
-        <div class="seller-bubble"><span id="seller-txt">Вибирай, вибирай...</span></div>
-        <img src="img/pig.png" class="seller-pig" alt="">
+        <div class="seller-bubble-wrap" id="seller-bubble-wrap">
+          <!-- SVG-хмаринка додається через JS -->
+        </div>
+        <img src="img/shop/seller-nameplate.png" class="seller-nameplate" alt="Містер Свин">
+        <img src="img/shop/seller-pig.png" class="seller-pig" alt="Містер Свин">
       </div>
     </div>
   </div>

@@ -1,10 +1,11 @@
 /* shop-ui.js */
 
+const SLOT_LABELS = { head:'Голова', body:'Тіло', face:'Лице', trinket:'Трінкет' };
+
 /* ════════════════════════════════════════
    ІНВЕНТАР-БАР (4 слоти знизу)
 ════════════════════════════════════════ */
 window.renderInventoryBar = function() {
-  const labels = { head:'Голова', body:'Тіло', face:'Лице', trinket:'Трінкет' };
   ['head','body','face','trinket'].forEach(slot => {
     const el = document.getElementById('inv-'+slot);
     if (!el) return;
@@ -14,113 +15,187 @@ window.renderInventoryBar = function() {
       el.innerHTML = `<span class="inv-icon">${item.emoji}</span><span class="inv-name">${item.name}</span>`;
       el.classList.add('filled');
     } else {
-      el.innerHTML = `<span class="inv-empty">${labels[slot]}</span>`;
+      el.innerHTML = `<span class="inv-empty">${SLOT_LABELS[slot]}</span>`;
       el.classList.remove('filled');
     }
   });
 };
 
 /* ════════════════════════════════════════
-   РЕНДЕР МАГАЗИНУ
+   РЕНДЕР МАГАЗИНУ — товари на поличках
+   Скіни та предмети змішані в один потік,
+   максимум 3 товари на одній поличці.
 ════════════════════════════════════════ */
 window.renderShop = function(S) {
   updateShopBalance(S);
-  renderShopSkins(S);
-  renderShopItems(S);
+  renderShopShelves(S);
 };
 
 function updateShopBalance(S) {
   const el = document.getElementById('shop-bal');
-  if (el) el.textContent = '💰 '+Math.floor(S.clicks).toLocaleString('uk');
+  if (el) el.textContent = Math.floor(S.clicks).toLocaleString('uk');
 }
 
-function renderShopSkins(S) {
-  const grid = document.getElementById('shop-skins');
-  if (!grid) return;
-  grid.innerHTML = '';
-  window.SHOP_POOL.skins.forEach(skin => {
-    const owned = window.OWNED_SKINS.has(skin.id);
-    const c = document.createElement('div');
-    c.className = 'sh-skin' + (owned ? ' owned' : '');
-    const canBuy = !owned && S.clicks >= skin.price;
-    c.innerHTML = `
-      <div class="sh-skin-emoji">🐷</div>
-      <div class="sh-item-name">${skin.name}</div>
-      <div class="sh-item-desc">${skin.desc}</div>
-      ${owned
-        ? `<button class="sh-btn-equip" data-id="${skin.id}">Одягти сет</button>`
-        : `<button class="sh-btn-buy ${canBuy?'afford':''}" data-id="${skin.id}">💰 ${skin.price.toLocaleString('uk')}</button>`}`;
-    c.addEventListener('mouseenter', () => onItemHover(skin.desc));
-    c.addEventListener('mouseleave', () => onItemLeave());
-    const btn = c.querySelector('button');
-    btn.addEventListener('click', () => {
-      if (owned) { window.equipSkin(skin.id, S); window.renderShop(S); return; }
-      if (S.clicks < skin.price) { btn.classList.add('shake'); setTimeout(()=>btn.classList.remove('shake'),400); return; }
-      S.clicks -= skin.price;
-      window.OWNED_SKINS.add(skin.id);
-      /* Одягаємо всі предмети скіна автоматично */
-      Object.values(skin.items).forEach(itemId => { if(itemId) window.OWNED_ITEMS.add(itemId); });
+function buildShopEntries() {
+  const entries = [];
+  window.SHOP_POOL.skins.forEach(skin => entries.push({ kind:'skin', data:skin }));
+  window.SHOP_POOL.items.forEach(item => entries.push({ kind:'item', data:item }));
+  return entries;
+}
+
+function chunk(arr, size) {
+  const out = [];
+  for (let i=0; i<arr.length; i+=size) out.push(arr.slice(i, i+size));
+  return out;
+}
+
+function renderShopShelves(S) {
+  const wrap = document.getElementById('shop-shelves');
+  if (!wrap) return;
+  wrap.innerHTML = '';
+
+  const entries = buildShopEntries();
+  const shelves = chunk(entries, 3);
+
+  shelves.forEach(shelfEntries => {
+    const shelf = document.createElement('div');
+    shelf.className = 'shop-shelf';
+
+    const plank = document.createElement('img');
+    plank.className = 'shop-shelf-plank';
+    plank.src = 'img/shop/shelf.png';
+    plank.alt = '';
+    shelf.appendChild(plank);
+
+    const itemsRow = document.createElement('div');
+    itemsRow.className = 'shop-shelf-items';
+
+    shelfEntries.forEach(entry => {
+      itemsRow.appendChild(entry.kind === 'skin' ? buildSkinEl(entry.data, S) : buildItemEl(entry.data, S));
+    });
+
+    shelf.appendChild(itemsRow);
+    wrap.appendChild(shelf);
+  });
+}
+
+function buildSkinEl(skin, S) {
+  const owned = window.OWNED_SKINS.has(skin.id);
+  const el = document.createElement('div');
+  el.className = 'shelf-item' + (owned ? ' owned' : '');
+  const canBuy = !owned && S.clicks >= skin.price;
+
+  el.innerHTML = `
+    <div class="shelf-item-icon-wrap"><span class="emoji">🐷</span></div>
+    <div class="shelf-item-name">${skin.name}</div>
+    ${owned
+      ? `<div class="shelf-item-tag owned-tag">Одягти сет</div>`
+      : `<div class="shelf-item-tag ${canBuy?'afford':'cant-afford'}">💰 ${skin.price.toLocaleString('uk')}</div>`}
+  `;
+
+  el.addEventListener('mouseenter', () => onItemHover(skin.desc));
+  el.addEventListener('mouseleave', () => onItemLeave());
+
+  el.addEventListener('click', () => {
+    if (owned) {
       window.equipSkin(skin.id, S);
       window.renderShop(S);
-      if (window._updateHUD) window._updateHUD();
-    });
-    grid.appendChild(c);
+      sellerSay(`Гарний вибір! Сет "${skin.name}" — на тобі!`);
+      resetSellerTimer();
+      return;
+    }
+    if (S.clicks < skin.price) {
+      el.classList.add('shake');
+      setTimeout(()=>el.classList.remove('shake'), 400);
+      sellerSay('Не вистачає копійчини...');
+      resetSellerTimer();
+      return;
+    }
+    S.clicks -= skin.price;
+    window.OWNED_SKINS.add(skin.id);
+    Object.values(skin.items).forEach(itemId => { if (itemId) window.OWNED_ITEMS.add(itemId); });
+    window.equipSkin(skin.id, S);
+    window.renderShop(S);
+    sellerSay(`Продано! Сет "${skin.name}" тепер твій.`);
+    resetSellerTimer();
+    if (window._updateHUD) window._updateHUD();
   });
+
+  return el;
 }
 
-function renderShopItems(S) {
-  const grid = document.getElementById('shop-items');
-  if (!grid) return;
-  grid.innerHTML = '';
-  window.SHOP_POOL.items.forEach(item => {
-    const owned    = window.OWNED_ITEMS.has(item.id);
-    const equipped = window.INVENTORY[item.slot] === item.id;
-    const canBuy   = !owned && S.clicks >= item.price;
-    const c = document.createElement('div');
-    c.className = 'sh-item' + (equipped ? ' equipped' : '') + (owned ? ' owned' : '');
-    c.innerHTML = `
-      <div class="sh-item-icon">${item.emoji}</div>
-      <div class="sh-item-name">${item.name}</div>
-      <div class="sh-slot-tag">${{head:'Голова',body:'Тіло',face:'Лице',trinket:'Трінкет'}[item.slot]}</div>
-      <div class="sh-item-desc">${item.desc}</div>
-      ${!owned
-        ? `<button class="sh-btn-buy ${canBuy?'afford':''}" data-id="${item.id}">💰 ${item.price.toLocaleString('uk')}</button>`
-        : equipped
-          ? `<button class="sh-btn-unequip" data-slot="${item.slot}">Зняти</button>`
-          : `<button class="sh-btn-equip" data-id="${item.id}">Одягти</button>`}`;
-    c.addEventListener('mouseenter', () => onItemHover(item.desc));
-    c.addEventListener('mouseleave', () => onItemLeave());
-    const btn = c.querySelector('button');
-    btn.addEventListener('click', () => {
-      if (btn.classList.contains('sh-btn-buy')) {
-        if (S.clicks < item.price) { btn.classList.add('shake'); setTimeout(()=>btn.classList.remove('shake'),400); return; }
-        S.clicks -= item.price; window.OWNED_ITEMS.add(item.id);
-        window.equipItem(item.id, S); window.renderShop(S); if(window._updateHUD) window._updateHUD();
-      } else if (btn.classList.contains('sh-btn-equip')) {
-        window.equipItem(item.id, S); window.renderShop(S);
-      } else if (btn.classList.contains('sh-btn-unequip')) {
-        window.unequipItem(item.dataset.slot || item.slot, S); window.renderShop(S);
+function buildItemEl(item, S) {
+  const owned    = window.OWNED_ITEMS.has(item.id);
+  const equipped = window.INVENTORY[item.slot] === item.id;
+  const canBuy   = !owned && S.clicks >= item.price;
+
+  const el = document.createElement('div');
+  el.className = 'shelf-item' + (owned ? ' owned' : '') + (equipped ? ' equipped' : '');
+
+  let tagHtml;
+  if (!owned) {
+    tagHtml = `<div class="shelf-item-tag ${canBuy?'afford':'cant-afford'}">💰 ${item.price.toLocaleString('uk')}</div>`;
+  } else if (equipped) {
+    tagHtml = `<div class="shelf-item-tag equipped-tag">Одягнено</div>`;
+  } else {
+    tagHtml = `<div class="shelf-item-tag owned-tag">Одягти</div>`;
+  }
+
+  el.innerHTML = `
+    <div class="shelf-item-icon-wrap"><span class="emoji">${item.emoji}</span></div>
+    <div class="shelf-item-name">${item.name}</div>
+    ${tagHtml}
+  `;
+
+  el.addEventListener('mouseenter', () => onItemHover(item.desc));
+  el.addEventListener('mouseleave', () => onItemLeave());
+
+  el.addEventListener('click', () => {
+    if (!owned) {
+      if (S.clicks < item.price) {
+        el.classList.add('shake');
+        setTimeout(()=>el.classList.remove('shake'), 400);
+        sellerSay('Не вистачає копійчини...');
+        resetSellerTimer();
+        return;
       }
-    });
-    grid.appendChild(c);
+      S.clicks -= item.price;
+      window.OWNED_ITEMS.add(item.id);
+      window.equipItem(item.id, S);
+      window.renderShop(S);
+      sellerSay(`Забирай, "${item.name}" — якісна річ!`);
+      resetSellerTimer();
+      if (window._updateHUD) window._updateHUD();
+    } else if (equipped) {
+      window.unequipItem(item.slot, S);
+      window.renderShop(S);
+      sellerSay('Зняв. Як скажеш.');
+      resetSellerTimer();
+    } else {
+      window.equipItem(item.id, S);
+      window.renderShop(S);
+      sellerSay(`Одягнув "${item.name}". Пасує!`);
+      resetSellerTimer();
+    }
   });
+
+  return el;
 }
 
-/* Містер Свин — таймер бездії */
+/* ════════════════════════════════════════
+   МІСТЕР СВИН — продавець, таймер бездії
+════════════════════════════════════════ */
 let _sellerTimer = null;
-let _sellerIdle = false;
 
 function sellerSay(txt) {
-  const el = document.getElementById('seller-txt');
+  const el = document.getElementById('seller-bubble-text');
   if (el) el.textContent = txt;
 }
 
 function resetSellerTimer() {
   clearSellerTimer();
-  _sellerIdle = false;
   _sellerTimer = setTimeout(() => {
     sellerSay('Вибирай швидше! Не маю цілий день...');
-    _sellerIdle = true;
   }, 15000);
 }
 
@@ -128,7 +203,6 @@ function clearSellerTimer() {
   if (_sellerTimer) { clearTimeout(_sellerTimer); _sellerTimer = null; }
 }
 
-/* При наведенні на предмет — скидаємо таймер */
 function onItemHover(desc) {
   sellerSay(desc);
   resetSellerTimer();
@@ -139,18 +213,35 @@ function onItemLeave() {
 }
 
 /* ════════════════════════════════════════
-   ВІДКРИТИ / ЗАКРИТИ
+   ПІКСЕЛЬНА ХМАРИНКА МОВЛЕННЯ (SVG)
+   Генерується один раз, текст оновлюється
+   окремим HTML-шаром поверх.
 ════════════════════════════════════════ */
-window.openShop = function(S) {
-  window.renderShop(S);
-  document.getElementById('shop-overlay').classList.add('open');
-  sellerSay('Щось зацікавило? У нас найвища якість товарів.');
-  resetSellerTimer();
-};
-window.closeShop = function() {
-  document.getElementById('shop-overlay').classList.remove('open');
-  clearSellerTimer();
-};
+function buildBubbleSVG() {
+  return `
+  <svg class="seller-bubble-svg" viewBox="0 0 200 110" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges">
+    <!-- контур (чорний) -->
+    <polygon fill="#241008" points="
+      16,8 168,8 168,16 176,16 176,24 184,24 184,64 176,64 176,72 168,72
+      168,80 120,80 112,92 108,80 32,80 32,72 16,72 16,64 8,64 8,24 16,24
+    "/>
+    <!-- заливка (світла) -->
+    <polygon fill="#f2e9da" points="
+      20,12 164,12 164,20 172,20 172,28 180,28 180,60 172,60 172,68 164,68
+      164,76 118,76 112,86 106,76 36,76 36,68 20,68 20,60 12,60 12,28 20,28
+    "/>
+    <!-- легка тінь всередині -->
+    <polygon fill="#ddccae" opacity="0.55" points="20,60 172,60 172,68 164,68 164,76 118,76 112,86 106,76 36,76 36,68 20,68"/>
+  </svg>`;
+}
+
+function ensureBubble() {
+  const wrap = document.getElementById('seller-bubble-wrap');
+  if (!wrap) return;
+  if (!wrap.querySelector('.seller-bubble-svg')) {
+    wrap.innerHTML = buildBubbleSVG() + '<div class="seller-bubble-text" id="seller-bubble-text"></div>';
+  }
+}
 
 /* ════════════════════════════════════════
    НІЧ / ПРОПУСТИТИ ДЕНЬ
@@ -179,22 +270,18 @@ const NIGHT_EVENTS = [
 
 window.triggerNight = function(S) {
   window.GAME_DAY++;
-  /* Оновлюємо пул магазину */
   window.generateShopPool();
 
-  /* Вибираємо подію */
   const ev = NIGHT_EVENTS[Math.floor(Math.random()*NIGHT_EVENTS.length)];
   let extraText = '';
   if (ev.effect) extraText = ev.effect(S) || '';
 
-  /* Показуємо екран ночі */
   const overlay = document.getElementById('night-overlay');
   document.getElementById('night-day').textContent  = `День ${window.GAME_DAY}`;
   document.getElementById('night-text').textContent = ev.text;
   document.getElementById('night-extra').textContent = extraText;
   overlay.className = 'night-' + ev.type;
   overlay.style.display = 'flex';
-  requestAnimationFrame(() => requestAnimationFrame(() => overlay.classList.add('night-visible')));
   requestAnimationFrame(() => requestAnimationFrame(() => overlay.classList.add('night-visible')));
 
   if (window._updateHUD) window._updateHUD();
@@ -204,4 +291,24 @@ window.closeNight = function() {
   const el = document.getElementById('night-overlay');
   el.classList.remove('night-visible');
   setTimeout(() => { el.style.display = 'none'; }, 420);
+};
+
+/* ════════════════════════════════════════
+   ВІДКРИТИ / ЗАКРИТИ МАГАЗИН
+════════════════════════════════════════ */
+window.openShop = function(S) {
+  ensureBubble();
+  window.renderShop(S);
+
+  playShopMusic(); // ← додай
+
+  document.getElementById('shop-overlay').classList.add('open');
+  sellerSay('Щось зацікавило? У нас найвища якість товарів.');
+  resetSellerTimer();
+};
+window.closeShop = function() {
+  playGameMusic(); // ← додай
+
+  document.getElementById('shop-overlay').classList.remove('open');
+  clearSellerTimer();
 };
